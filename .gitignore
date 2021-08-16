@@ -1,0 +1,6 @@
+/dist/
+/node_modules/
+notes.txt
+notes.org
+.cache
+.DS_Store
