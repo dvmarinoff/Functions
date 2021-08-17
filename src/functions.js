@@ -106,6 +106,9 @@ function map(coll, fn) {
         return Object.fromEntries(
             Object.entries(coll).map(([k, v], i) => [k, (fn(v, k, i))]));
     }
+    if(isString(coll)) {
+        return coll.split('').map(fn).join('');
+    }
     throw new Error(`map called with unkown collection `, coll);
 }
 
@@ -294,6 +297,18 @@ function dataviewToString(dataview) {
     return utf8decoder.decode(dataview.buffer);
 }
 
+function stringToCharCodes(str) {
+    return str.split('').map(c => c.charCodeAt(0));
+}
+
+function stringToDataview(str) {
+    let charCodes = stringToCharCodes(str);
+    let uint8 = new Uint8Array(charCodes);
+    let dataview = new DataView(uint8.buffer);
+
+    return dataview;
+}
+
 function fromUint16(n) {
     let buffer = new ArrayBuffer(2);
     let view = new DataView(buffer);
@@ -347,6 +362,11 @@ export {
     sum,
     getIn,
 
+    // functions
+    compose,
+    pipe,
+    repeat,
+
     // async
     delay,
 
@@ -354,13 +374,12 @@ export {
     xf,
 
     // bits
-    dataviewToArray,
-    dataviewToString,
     nthBit,
     bitToBool,
     nthBitToBool,
-    fromUint16,
-    fromUint32,
+    dataviewToArray,
+    dataviewToString,
+    stringToCharCodes,
     toUint8Array,
     xor,
 };

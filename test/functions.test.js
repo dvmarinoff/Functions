@@ -22,6 +22,11 @@ import {
     max,
     sum,
 
+    // functions
+    compose,
+    pipe,
+    repeat,
+
     // async
     delay,
 
@@ -29,23 +34,22 @@ import {
     xf,
 
     // bits
-
-    dataviewToArray,
-    dataviewToString,
     nthBit,
     bitToBool,
     nthBitToBool,
-    fromUint16,
-    fromUint32,
+    dataviewToArray,
+    dataviewToString,
+    stringToCharCodes,
     toUint8Array,
     xor,
 } from '../src/functions.js';
 
-describe('Exists', () => {
+describe('exists', () => {
     describe('does not exist', () => {
         test('null does not exist', () => {
             expect(exists(null)).toBe(false);
         });
+
         test('undefined does not exist', () => {
             expect(exists(undefined)).toBe(false);
         });
@@ -58,9 +62,11 @@ describe('Exists', () => {
             expect(exists("")).toBe(true);
             expect(exists(new Uint8Array([]))).toBe(true);
         });
+
         test('zero exists', () => {
             expect(exists(0)).toBe(true);
         });
+
         test('Booleans exist', () => {
             expect(exists(true)).toBe(true);
             expect(exists(false)).toBe(true);
@@ -69,28 +75,32 @@ describe('Exists', () => {
 });
 
 describe('existance check', () => {
-    describe('does not exist', () => {
+
+    describe('when the input value does not exist it returns the fallback value', () => {
         test('with Null', () => {
-            expect(exists(null)).toBe(false);
+            expect(existance(null, 1)).toBe(1);
         });
+
         test('with Undefined', () => {
-            expect(exists(undefined)).toBe(false);
+            expect(existance(undefined, 1)).toBe(1);
         });
     });
 
-    describe('exists', () => {
+    describe('when the input value exists it returns the input value', () => {
         test('with Collection', () => {
-            expect(exists({})).toBe(true);
-            expect(exists([])).toBe(true);
-            expect(exists("")).toBe(true);
-            expect(exists(new Uint8Array([]))).toBe(true);
+            expect(existance({}, 1)).toStrictEqual({});
+            expect(existance([], 1)).toStrictEqual([]);
+            expect(existance("", 1)).toBe("");
+            expect(existance(new Uint8Array([]))).toStrictEqual(new Uint8Array([]));
         });
+
         test('with Number', () => {
-            expect(exists(0)).toBe(true);
+            expect(existance(0, 1)).toBe(0);
         });
+
         test('with Boolean', () => {
-            expect(exists(true)).toBe(true);
-            expect(exists(false)).toBe(true);
+            expect(existance(true, 1)).toBe(true);
+            expect(existance(false, 1)).toBe(false);
         });
     });
 });
@@ -100,12 +110,15 @@ describe('empty check', () => {
         test('with empty Array', () => {
             expect(empty([])).toBe(true);
         });
+
         test('with empty Object', () => {
             expect(empty({})).toBe(true);
         });
+
         test('with empty String', () => {
             expect(empty("")).toBe(true);
         });
+
         test('with undefined', () => {
             expect(empty(undefined)).toBe(true);
         });
@@ -115,9 +128,11 @@ describe('empty check', () => {
         test('with Array', () => {
             expect(empty([0])).toBe(false);
         });
+
         test('with Object', () => {
             expect(empty({a: 0})).toBe(false);
         });
+
         test('with String', () => {
             expect(empty("zero")).toBe(false);
         });
@@ -127,6 +142,7 @@ describe('empty check', () => {
         test('with null', () => {
             expect(() => empty(null)).toThrow();
         });
+
         test('with number', () => {
             expect(() => empty(0)).toThrow();
         });
@@ -138,6 +154,7 @@ describe('first element of collection', () => {
         test('of Array', () => {
             expect(first([0])).toBe(0);
         });
+
         test('of String', () => {
             expect(first("zero")).toBe("z");
         });
@@ -147,6 +164,7 @@ describe('first element of collection', () => {
         test('of Array', () => {
             expect(first([])).toBe(undefined);
         });
+
         test('of String', () => {
             expect(first("")).toBe(undefined);
         });
@@ -162,6 +180,7 @@ describe('first element of collection', () => {
         test('with number', () => {
             expect(() => first(0)).toThrow();
         });
+
         test('with null', () => {
             expect(() => first(null)).toThrow();
         });
@@ -173,6 +192,7 @@ describe('second element of collection', () => {
         test('of Array', () => {
             expect(second([0,1])).toBe(1);
         });
+
         test('of String', () => {
             expect(second("zero")).toBe("e");
         });
@@ -182,6 +202,7 @@ describe('second element of collection', () => {
         test('of Array', () => {
             expect(second([])).toBe(undefined);
         });
+
         test('of String', () => {
             expect(second("")).toBe(undefined);
         });
@@ -191,6 +212,7 @@ describe('second element of collection', () => {
         test('of Array', () => {
             expect(second([])).toBe(undefined);
         });
+
         test('of String', () => {
             expect(second("")).toBe(undefined);
         });
@@ -206,6 +228,7 @@ describe('second element of collection', () => {
         test('with number', () => {
             expect(() => second(0)).toThrow();
         });
+
         test('with null', () => {
             expect(() => second(null)).toThrow();
         });
@@ -213,12 +236,13 @@ describe('second element of collection', () => {
 });
 
 describe('last element of Collection or String', () => {
-    describe('works non-empty Collection or String', () => {
+    describe('works with non-empty Collection or String', () => {
         test('with Array', () => {
             expect(last([0])).toBe(0);
             expect(last([0,2])).toBe(2);
             expect(last([0,1,4])).toBe(4);
         });
+
         test('with String', () => {
             expect(last('a')).toBe('a');
             expect(last('ab')).toBe('b');
@@ -227,10 +251,11 @@ describe('last element of Collection or String', () => {
         });
     });
 
-    describe('empty Collection or String is undefined', () => {
+    describe('with empty Collection or String it returns undefined', () => {
         test('with Array', () => {
             expect(last([])).toBe(undefined);
         });
+
         test('with String', () => {
             expect(last('')).toBe(undefined);
         });
@@ -246,6 +271,7 @@ describe('last element of Collection or String', () => {
         test('with number', () => {
             expect(() => last(0)).toThrow();
         });
+
         test('with null', () => {
             expect(() => last(null)).toThrow();
         });
@@ -277,6 +303,128 @@ describe('traverse nested object', () => {
                                   stop: false}},
                    crc: false};
         expect(traverse(obj, accumulate, [])).toEqual([true, true, false, false]);
+    });
+});
+
+describe('map', () => {
+    const inc = (n) => n + 1;
+
+    test('map an Array', () => {
+        expect(map([], inc)).toStrictEqual([]);
+        expect(map([0], inc)).toStrictEqual([1]);
+        expect(map([0,1,2,3], inc)).toStrictEqual([1,2,3,4]);
+    });
+
+    test('map an Object', () => {
+        expect(map({}, inc)).toStrictEqual({});
+        expect(map({x: 0}, inc)).toStrictEqual({x: 1});
+        expect(map({x: 0, y: 1, z: 2}, inc)).toStrictEqual({x: 1, y: 2, z: 3});
+    });
+
+    test('map a String', () => {
+        const toUpperCase = c => c.toUpperCase();
+
+        expect(map('', toUpperCase)).toStrictEqual('');
+        expect(map('ab cd', toUpperCase)).toStrictEqual('AB CD');
+    });
+});
+
+describe('avg', () => {
+    test('avg of array', () => {
+        expect(avg([0,1,2])).toBe(1);
+    });
+
+    test('avg of array of objects', () => {
+        expect(avg([{x: 0}, {x: 1}, {x: 2}], 'x')).toBe(1);
+    });
+});
+
+describe('sum', () => {
+    test('sum of array', () => {
+        expect(sum([0])).toBe(0);
+        expect(sum([0,1,2])).toBe(3);
+    });
+
+    test('sum of array of objects', () => {
+        expect(sum([{x: 0}, {x: 1}, {x: 2}], 'x')).toBe(3);
+    });
+});
+
+describe('max', () => {
+    test('max of array', () => {
+        expect(max([0])).toBe(0);
+        expect(max([0,3,1])).toBe(3);
+    });
+
+    test('max of array of objects', () => {
+        expect(max([{x: 0}], 'x')).toBe(0);
+        expect(max([{x: 0}, {x: 3}, {x: 1},], 'x')).toBe(3);
+    });
+});
+
+describe('getIn', () => {
+    const data = {x: {a: {one: 1, two: 2}, b: {three: 3}}, y: {}};
+
+    test('', () => {
+        expect(getIn(data, 'x')).toStrictEqual({a: {one: 1, two: 2}, b: {three: 3}});
+        expect(getIn(data, 'y')).toStrictEqual({});
+        expect(getIn(data, 'x', 'a')).toStrictEqual({one: 1, two: 2});
+        expect(getIn(data, 'x', 'a', 'one')).toBe(1);
+        expect(getIn(data, 'x', 'a', 'two')).toBe(2);
+        expect(getIn(data, 'x', 'b', 'three')).toBe(3);
+        expect(getIn(data, 'z')).toBe(undefined);
+    });
+});
+
+describe('compose', () => {
+    const inc = (n) => n + 1;
+    const dec = (n) => n - 1;
+    const sqr = (n) => Math.pow(n, 2);
+
+    test('inc . dec = identity', () => {
+        expect(compose(dec, inc)(1)).toBe(1);
+    });
+
+    test('sqr . inc', () => {
+        expect(compose(inc, sqr)(3)).toBe(10);
+    });
+
+    test('inc . sqr', () => {
+        expect(compose(sqr, inc)(3)).toBe(16);
+    });
+});
+
+describe('pipe', () => {
+    const inc = (n) => n + 1;
+    const dec = (n) => n - 1;
+    const sqr = (n) => Math.pow(n, 2);
+
+    test('inc | dec = identity', () => {
+        expect(pipe(dec, inc)(1)).toBe(1);
+    });
+
+    test('sqr . inc', () => {
+        expect(pipe(sqr, inc)(3)).toBe(10);
+    });
+
+    test('inc . sqr', () => {
+        expect(pipe(inc, sqr)(3)).toBe(16);
+    });
+});
+
+describe('repeat', () => {
+    const inc = (n) => n + 1;
+
+    test('0 x repeat inc', () => {
+        expect(repeat(0)(inc)(0)).toBe(0);
+    });
+
+    test('1 x repeat inc', () => {
+        expect(repeat(1)(inc)(0)).toBe(1);
+    });
+
+    test('4 x repeat inc', () => {
+        expect(repeat(4)(inc)(0)).toBe(4);
     });
 });
 
@@ -332,86 +480,83 @@ describe('XF', () => {
     });
 });
 
-
-describe('map', () => {
-    const inc = (n) => n + 1;
-
-    test('map an Array', () => {
-        expect(map([0,1,2,3], inc)).toStrictEqual([1,2,3,4]);
-    });
-
-    test('map an Object', () => {
-        expect(map({x: 0, y: 1, z: 2}, inc)).toStrictEqual({x: 1, y: 2, z: 3});
+describe('nthBit', () => {
+    test('get the nth bit from a bit field', () => {
+        expect(nthBit(0b00000001, 0)).toBe(1);
+        expect(nthBit(0b00000101, 2)).toBe(1);
+        expect(nthBit(0b00010101, 4)).toBe(1);
+        expect(nthBit(0b10010101, 6)).toBe(0);
+        expect(nthBit(0b10010101, 7)).toBe(1);
     });
 });
 
-describe('avg', () => {
-    test('avg of array', () => {
-        expect(avg([0,1,2])).toBe(1);
-    });
-
-    test('avg of array of objects', () => {
-        expect(avg([{x: 0}, {x: 1}, {x: 2}], 'x')).toBe(1);
+describe('bitToBool', () => {
+    test('get the nth bit from a bit field', () => {
+        expect(bitToBool(1)).toBe(true);
+        expect(bitToBool(0)).toBe(false);
     });
 });
 
-describe('sum', () => {
-    test('sum of array', () => {
-        expect(sum([0])).toBe(0);
-        expect(sum([0,1,2])).toBe(3);
-    });
-
-    test('sum of array of objects', () => {
-        expect(sum([{x: 0}, {x: 1}, {x: 2}], 'x')).toBe(3);
-    });
-});
-
-describe('max', () => {
-    test('max of array', () => {
-        expect(max([0])).toBe(0);
-        expect(max([0,3,1])).toBe(3);
-    });
-
-    test('max of array of objects', () => {
-        expect(max([{x: 0}], 'x')).toBe(0);
-        expect(max([{x: 0}, {x: 3}, {x: 1},], 'x')).toBe(3);
+describe('nthBitToBool', () => {
+    test('get the nth bit from a bit field', () => {
+        expect(nthBitToBool(0b00000001, 0)).toBe(true);
+        expect(nthBitToBool(0b00000101, 2)).toBe(true);
+        expect(nthBitToBool(0b00010101, 4)).toBe(true);
+        expect(nthBitToBool(0b10010101, 6)).toBe(false);
+        expect(nthBitToBool(0b10010101, 7)).toBe(true);
     });
 });
 
-describe('getIn', () => {
-    const data = {x: {a: {one: 1, two: 2}, b: {three: 3}}, y: {}};
+describe('dataviewToArray', () => {
+    let uint8 = new Uint8Array([164, 3, 84, 0]);
+    let dataview = new DataView(uint8.buffer);
 
-    test('', () => {
-        expect(getIn(data, 'x')).toStrictEqual({a: {one: 1, two: 2}, b: {three: 3}});
-        expect(getIn(data, 'y')).toStrictEqual({});
-        expect(getIn(data, 'x', 'a')).toStrictEqual({one: 1, two: 2});
-        expect(getIn(data, 'x', 'a', 'one')).toBe(1);
-        expect(getIn(data, 'x', 'a', 'two')).toBe(2);
-        expect(getIn(data, 'x', 'b', 'three')).toBe(3);
-        expect(getIn(data, 'z')).toBe(undefined);
+    test('dataview to js array', () => {
+        expect(dataviewToArray(dataview)).toStrictEqual([164, 3, 84, 0]);
     });
 });
 
-// describe('compose', () => {
-//     test('', () => {
-//         expect().toBe();
+
+describe('stringToCharCodes', () => {
+    test('string to char codes', () => {
+        expect(stringToCharCodes('Functions')).toStrictEqual([70, 117, 110, 99, 116, 105, 111, 110, 115]);
+    });
+});
+
+//
+// TextDecoder is not available in Jest, but if it was that's the function usage:
+//
+// describe('dataviewToString', () => {
+//     let uint8 = new Uint8Array([70, 117, 110, 99, 116, 105, 111, 110, 115]);
+//     let dataview = new DataView(uint8.buffer);
+//
+//     test('dataview to string', () => {
+//         expect(dataviewToString(dataview)).toBe('Functions');
 //     });
 // });
 
-// describe('pipe', () => {
-//     test('', () => {
-//         expect().toBe();
-//     });
-// });
+describe('toUint8Array', () => {
+    test('to Uint8Array (16)', () => {
+        expect(dataviewToArray(toUint8Array(2**8, 16))).toStrictEqual([0, 1]);
+    });
 
-// describe('repeat', () => {
-//     test('', () => {
-//         expect().toBe();
-//     });
-// });
+    test('to Uint8Array (32)', () => {
+        expect(dataviewToArray(toUint8Array(2**24, 32))).toStrictEqual([0, 0, 0, 1]);
+    });
+});
+
+describe('xor', () => {
+    test('xor', () => {
+        let uint8 = new Uint8Array([70, 117, 110, 99, 116, 105, 111, 110, 115]);
+        let dataview = new DataView(uint8.buffer);
+
+        expect(xor(dataview)).toBe(81);
+    });
+});
 
 // describe('', () => {
 //     test('', () => {
 //         expect().toBe();
 //     });
 // });
+
